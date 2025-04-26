@@ -1,0 +1,70 @@
+import folium
+import webbrowser
+import openrouteservice
+from openrouteservice import convert
+
+
+# Get user input for start and end locations
+start_lat = float(input("Enter start latitude: "))
+start_lng = float(input("Enter start longitude: "))
+end_lat = float(input("Enter end latitude: "))
+end_lng = float(input("Enter end longitude: "))
+
+# Initialize the map centered at start point
+m = folium.Map(location=[start_lat, start_lng], zoom_start=13)
+
+
+client = openrouteservice.Client(key='5b3ce3597851110001cf62486d3b180011c7482a984347bdbf8144b7')
+
+
+
+# Create coordinates tuple
+coords = ((start_lng, start_lat), (end_lng, end_lat))  # (lng, lat)
+
+# Request directions
+route = client.directions(coords)
+
+# Decode polyline
+geometry = route['routes'][0]['geometry']
+decoded = convert.decode_polyline(geometry)
+
+# Extract coordinates
+route_coords = [(point[1], point[0]) for point in decoded['coordinates']]
+
+# Draw the route
+folium.PolyLine(route_coords, color="blue", weight=5, opacity=0.7).add_to(m)
+
+
+# Add start and end markers
+folium.Marker(location=[start_lat, start_lng], tooltip="Start", icon=folium.Icon(color='green')).add_to(m)
+folium.Marker(location=[end_lat, end_lng], tooltip="End", icon=folium.Icon(color='red')).add_to(m)
+
+
+# Save the map
+m.save('map_with_route.html')
+
+
+# Add a simple marker
+folium.Marker(
+    location=[34.0522, -118.2437],
+    popup="Chicago!",
+    tooltip="Click me!",
+).add_to(m)
+
+# Display the map
+m.save("my_map.html")
+
+
+webbrowser.open('my_map.html')
+
+
+
+
+
+
+
+
+
+
+
+
