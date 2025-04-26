@@ -1,0 +1,55 @@
+import folium
+import openrouteservice
+from openrouteservice import convert
+import webbrowser
+
+# Get user input for addresses
+start_address = input("Enter start address: ")
+end_address = input("Enter end address: ")
+
+# Set up OpenRouteService client
+client = openrouteservice.Client(key='5b3ce3597851110001cf62486d3b180011c7482a984347bdbf8144b7')
+
+# Geocode addresses to coordinates
+start_coords = client.pelias_search(text=start_address)['features'][0]['geometry']['coordinates']
+end_coords = client.pelias_search(text=end_address)['features'][0]['geometry']['coordinates']
+
+# Initialize map centered at start point
+m = folium.Map(location=[start_coords[1], start_coords[0]], zoom_start=13)
+
+# Create coordinate tuple
+coords = (tuple(start_coords), tuple(end_coords))  # (lng, lat)
+
+# Request directions
+route = client.directions(coords)
+
+# Decode polyline
+geometry = route['routes'][0]['geometry']
+decoded = convert.decode_polyline(geometry)
+
+# Extract coordinates
+route_coords = [(point[1], point[0]) for point in decoded['coordinates']]
+
+# Draw the route
+folium.PolyLine(route_coords, color="blue", weight=5, opacity=0.7).add_to(m)
+
+# Add start and end markers
+folium.Marker(location=[start_coords[1], start_coords[0]], tooltip="Start", icon=folium.Icon(color='green')).add_to(m)
+folium.Marker(location=[end_coords[1], end_coords[0]], tooltip="End", icon=folium.Icon(color='red')).add_to(m)
+
+# Save the map
+m.save('address_route_map.html')
+
+
+
+webbrowser.open('address_route_map.html')
+
+
+
+
+
+
+
+
+
+
